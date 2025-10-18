@@ -74,8 +74,7 @@ php artisan key:generate
 
 ```bash
 # Modifier .env avec vos paramètres de base de données
-php artisan migrate
-php artisan db:seed
+Créer la base de données et importer le fichier yawaimmo.sql 
 ```
 
 6. **Créer le lien symbolique pour le stockage**
