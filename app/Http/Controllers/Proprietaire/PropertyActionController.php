@@ -183,4 +183,58 @@ class PropertyActionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Supprime directement un bien sans vérification client
+     */
+    public function deleteDirect(Property $property)
+    {
+        // Vérifier que l'utilisateur est bien le propriétaire du bien
+        if ($property->user_id !== Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non autorisé.'
+            ], 403);
+        }
+
+        try {
+            // Journalisation avant suppression
+            \Log::info('Suppression directe du bien', [
+                'property_id' => $property->id,
+                'user_id' => Auth::id()
+            ]);
+
+            // Supprimer les images associées
+            if ($property->image) {
+                Storage::disk('public')->delete($property->image);
+            }
+
+            // Supprimer les images supplémentaires
+            if ($property->additional_images) {
+                foreach (json_decode($property->additional_images, true) as $image) {
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            // Supprimer définitivement le bien
+            $property->forceDelete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Le bien a été supprimé avec succès.'
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors de la suppression directe du bien:', [
+                'message' => $e->getMessage(),
+                'property_id' => $property->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la suppression du bien: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

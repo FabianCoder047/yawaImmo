@@ -35,15 +35,7 @@ export default function HeroCarousel() {
   // Log pour déboguer
   console.log('Featured Properties:', featuredProperties);
   if (featuredProperties && featuredProperties.length > 0) {
-    console.log('First property image path:', featuredProperties[0]?.image);
-    console.log('Full image URL:', 
-      featuredProperties[0]?.image 
-        ? (featuredProperties[0].image.startsWith('http') 
-            ? featuredProperties[0].image 
-            : featuredProperties[0].image.startsWith('/storage/')
-              ? featuredProperties[0].image
-              : `/storage/${featuredProperties[0].image}`)
-        : 'No image');
+    console.log('First property images:', featuredProperties[0]?.all_images || [featuredProperties[0]?.image]);
   }
 
   // Si aucune propriété n'est disponible, ne pas afficher le carrousel
@@ -70,7 +62,7 @@ export default function HeroCarousel() {
         loop={true}
         className="h-[90vh]"
       >
-        {featuredProperties.flatMap(property => {
+        {featuredProperties.map((property, index) => {
           // Utiliser all_images si disponible, sinon utiliser l'image unique
           const images = property.all_images && property.all_images.length > 0 
             ? property.all_images 

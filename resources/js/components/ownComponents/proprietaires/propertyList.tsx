@@ -707,6 +707,56 @@ const openEditModal = (property: any) => {
         }
     };
 
+    const handleDirectDelete = async (propertyId: number) => {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Supprimer définitivement ce bien ?',
+            text: 'Cette action est irréversible. Êtes-vous sûr de vouloir supprimer ce bien ?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler'
+        });
+
+        if (isConfirmed) {
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                const response = await fetch(`/proprietaire/mes-biens/${propertyId}/delete-direct`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erreur lors de la suppression du bien');
+                }
+
+                // Mettre à jour l'état local en supprimant le bien
+                setProperties(prev => prev.filter(property => property.id !== propertyId));
+                
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Supprimé!',
+                    text: data.message || 'Le bien a été supprimé avec succès.',
+                });
+            } catch (error) {
+                console.error('Erreur lors de la suppression du bien:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur',
+                    text: error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression du bien'
+                });
+            }
+        }
+    };
+
     const handleDelete = async (propertyId: number) => {
         const { value: formValues, isConfirmed } = await Swal.fire({
             title: 'Supprimer ce bien',
@@ -878,6 +928,39 @@ const openEditModal = (property: any) => {
                             <PropertyCard property={property} />
                             <div className="absolute top-2 right-2 flex gap-2">
                                 {property.status === 'Loué' ? (
+                                    <button
+                                        onClick={() => handleReactivationRequest(property.id)}
+                                        className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600"
+                                        title="Demander la republication"
+                                    >
+                                        <RefreshCw className="h-4 w-4" />
+                                    </button>
+                                ) : property.status === 'Vendu' ? (
+                                    <div className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600">
+                                        Ce bien est vendu
+                                    </div>
+                                ) : property.status === 'En attente' ? (
+                                    <>
+                                    <button
+                                        onClick={() => openEditModal(property)}
+                                        className="rounded-full bg-blue-500 p-2 text-white hover:bg-blue-600"
+                                        title="Modifier"
+                                        >
+                                        <Edit className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDirectDelete(property.id)}
+                                        className="rounded-full bg-red-500 p-2 text-white hover:bg-red-600"
+                                        title="Supprimer définitivement"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                        </>
+                                ) : property.status === 'Rejeté' ? (
+                                    <div className="rounded-full bg-red-500 p-2 text-white hover:bg-red-600">
+                                        Ce bien est rejeté
+                                    </div>
+                                ) : property.status !== 'Approuvé' ? (
                                     <button
                                         onClick={() => handleReactivationRequest(property.id)}
                                         className="rounded-full bg-green-500 p-2 text-white hover:bg-green-600"

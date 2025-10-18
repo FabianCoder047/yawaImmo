@@ -40,11 +40,6 @@ export default function TopBar({ user, onToggleSidebar }: TopBarProps) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem asChild>
-              <Link href={route('login')} className="w-full">
-                Mon Profil
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               Déconnexion
             </DropdownMenuItem>

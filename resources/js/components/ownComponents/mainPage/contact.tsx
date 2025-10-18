@@ -34,7 +34,7 @@ export default function Contact() {
           {/* Google Map */}
           <div className="rounded-md overflow-hidden shadow">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes+Square!5e0!3m2!1ses-419!2sve!4v1510329142834"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d623.535xxxxxx!2d1.1987173!3d6.1454916!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x10215f4d74be1d67%3A0x2d5b35a61f09598a!2sColl%C3%A8ge%20Protestant%20Lom%C3%A9%20Tokoin!5e0!3m2!1sfr!2stg!4v169xxxxxxx"
               width="100%"
               height="450"
               style={{ border: 0 }}
@@ -79,7 +79,7 @@ export default function Contact() {
                 <FaMapMarkerAlt className="text-2xl text-green-600" />
                 <div>
                   <h4 className="font-semibold text-gray-800">Trouvez-nous à</h4>
-                  <p className="text-sm">Lomé, Togo</p>
+                  <p className="text-sm">Collège Protestant , Lomé, Togo</p>
                 </div>
               </div>
 

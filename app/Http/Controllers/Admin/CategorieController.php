@@ -102,32 +102,34 @@ class CategorieController extends Controller
     /**
      * Supprime une catégorie
      */
-    public function destroy(Categorie $categorie)
-    {
-        try {
-            // Vérifier d'abord si la catégorie est utilisée dans des biens
-            $usedInBiens = DB::table('biens')->where('categorie_id', $categorie->id)->exists();
-            
-            if ($usedInBiens) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Impossible de supprimer cette catégorie car elle est utilisée par un ou plusieurs biens',
-                ], 422);
-            }
-
-            $categorie->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Catégorie supprimée avec succès'
-            ]);
-
-        } catch (\Exception $e) {
+    public function destroy($id)
+{
+    try {
+        $categorie = Categorie::findOrFail($id);
+        
+        // Vérifier si la catégorie est utilisée dans des propriétés
+        $usedInProperties = $categorie->properties()->exists();
+        
+        if ($usedInProperties) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la suppression de la catégorie',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Impossible de supprimer cette catégorie car elle est utilisée par un ou plusieurs biens',
+            ], 422);
         }
+
+        $categorie->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Catégorie supprimée avec succès'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors de la suppression de la catégorie',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 }

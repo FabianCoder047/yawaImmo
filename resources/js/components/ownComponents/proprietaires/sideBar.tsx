@@ -104,7 +104,6 @@ import {
             </DropdownMenuTrigger>
   
             <DropdownMenuContent side="top" align="start" className="w-48">
-              <DropdownMenuItem onClick={() => window.location.href = '/profile'}>Profil</DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>Déconnexion</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

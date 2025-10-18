@@ -173,20 +173,16 @@ export default function ProprietaireDashboard({ subscription, recentProperties =
                         <CardDescription>Gérez vos biens rapidement</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Link href="/proprietaire/mes-biens">
-                            <Button className="w-full" variant="outline">
+                            <Button className="w-full" variant="outline" onClick={()=>window.location.href='/proprietaire/mes-biens'}>
                                 <FaHome className="mr-2 h-4 w-4" />
                                 Ajouter un bien
                             </Button>
-                        </Link>
 
                         <div className="my-4 border-b border-gray-200"></div>
-                        <Link href="/proprietaire/mes-biens">
-                            <Button className="w-full" variant="outline">
+                            <Button className="w-full" variant="outline" onClick={()=>window.location.href='/proprietaire/mes-biens'}>
                                 <FaEye className="mr-2 h-4 w-4" />
                                 Gérer mes biens
                             </Button>
-                        </Link>
                     </CardContent>
                 </Card>
 
@@ -233,11 +229,11 @@ export default function ProprietaireDashboard({ subscription, recentProperties =
                                     {subscription ? subscription.end_date : 'N/A'}
                                 </span>
                             </div>
-                            {subscription?.status && (
+                            {!subscription?.status && (
                                 <div className="pt-4">
-                                    <Link href="/proprietaire/subscription" className="text-sm font-medium text-primary hover:underline">
-                                        Gérer mon abonnement →
-                                    </Link>
+                                    <Button className="w-full" variant="outline" onClick={()=>window.location.href='/proprietaire/mes-biens'}>
+                                        Gérer mon abonnement
+                                    </Button>
                                 </div>
                             )}
                         </div>

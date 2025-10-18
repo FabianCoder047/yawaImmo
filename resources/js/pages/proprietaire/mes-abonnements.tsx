@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Check, AlertCircle } from 'lucide-react';
+import { Loader2, Check, AlertCircle, X } from 'lucide-react';
 import { usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import LayoutProprietaire from '@/layouts/layoutProprietaire';
+import { Alert } from '@/components/ui/alert';
 
 interface Abonnement {
   id: number;
@@ -109,22 +110,7 @@ export default function MesAbonnements({ abonnements = [], abonnementsDisponible
                       <p className="font-medium">{abonnement.date_fin}</p>
                     </div>
                   </div>
-                  <div className="pt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleRenouveler(abonnement.id)}
-                      disabled={isLoading === abonnement.id}
-                    >
-                      {isLoading === abonnement.id ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Chargement...
-                        </>
-                      ) : (
-                        'Renouveler mon abonnement'
-                      )}
-                    </Button>
-                  </div>
+                  
                 </div>
               ))}
           </CardContent>
@@ -150,9 +136,18 @@ export default function MesAbonnements({ abonnements = [], abonnementsDisponible
                         Du {abonnement.date_debut} au {abonnement.date_fin}
                       </p>
                     </div>
-                    <Badge variant={abonnement.est_actif ? 'default' : 'outline'} className="ml-4">
-                      {abonnement.est_actif ? 'Actif' : 'Expiré'}
-                    </Badge>
+                    <Badge className="bg-red-500 text-white hover:bg-red-800">
+                      <X className="mr-1 h-3 w-3" /> Expiré
+                  </Badge>
+                    <div className="pt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleRenouveler(abonnement.id)}
+                      disabled={isLoading === abonnement.id}
+                    >
+                        Renouveler mon abonnement
+                    </Button>
+                  </div>
                   </div>
                 ))}
               {abonnements.every(a => a.est_actif) && (
@@ -188,14 +183,6 @@ export default function MesAbonnements({ abonnements = [], abonnementsDisponible
                     Pour {abonnement.duration_months} mois
                   </p>
                 </CardHeader>
-                <CardContent>
-                  <Button 
-                    className="mt-6 w-full"
-                    onClick={() => router.visit(`/proprietaire/subscription?abonnement_id=${abonnement.id}`)}
-                  >
-                    Souscrire
-                  </Button>
-                </CardContent>
               </Card>
             ))}
           </div>

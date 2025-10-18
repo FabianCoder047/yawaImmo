@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import BestAgents from '@/components/ownComponents/mainPage/bestAgents';
 import HeroCarousel from '@/components/ownComponents/mainPage/heroCaroussel';
 import Services from '@/components/ownComponents/mainPage/servicesSection';
 import LatestProperties from '@/components/ownComponents/mainPage/latestProperties';
@@ -231,7 +230,6 @@ export default function Welcome({
                 </div>
 
                 <LatestProperties properties={initialProperties} filters={filters} />
-                <BestAgents />
             </MainLayout>
         </>
     );

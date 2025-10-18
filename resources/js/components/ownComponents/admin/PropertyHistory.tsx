@@ -250,9 +250,9 @@ export default function PropertyHistory({
                         <Card key={property.id} className="overflow-hidden">
                             <div className="md:flex p-4">
                                 <div className="md:w-1/4 h-48 md:h-48 bg-gray-100">
-                                    {property.images && property.images.length > 0 ? (
+                                    {property.image ? (
                                         <img
-                                            src={property.images[0].url}
+                                            src={property.image }
                                             alt={property.title}
                                             className="w-full h-full object-cover"
                                         />

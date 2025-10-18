@@ -46,7 +46,7 @@ export default function About() {
                 YawaImmo
                 <span className="block h-1 w-10 bg-[#2E7D32] my-2"></span>
                 <br />
-                + 10 ans d'expérience
+                6 mois d'expérience
               </h3>
               <p className="text-sm text-gray-500">Spécialisée dans la vente et la location de biens immobiliers</p>
             </div>
@@ -73,8 +73,12 @@ export default function About() {
               <p className="text-gray-600 mb-4">
                 Spécialisée dans la vente et la location de biens immobiliers
               </p>
-              <p className="text-gray-600">
-                YawaImmo est une agence immobilière spécialisée dans la vente et la location de biens immobiliers. 
+              <p className="text-gray-600 space-y-2 letter-spacing-2">
+                YawaImmo est une agence immobilière spécialisée dans la vente et la location de biens immobiliers.
+                Nous nous penchons sur la satisfaction de nos clients et sur la qualité de nos services.
+
+                Toute l'équipe de YawaImmo est à votre disposition pour vous aider dans vos démarches immobilières.
+                
               </p>
             </div>
           </div>

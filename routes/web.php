@@ -112,6 +112,10 @@ require __DIR__.'/auth.php';
                 // Supprimer un bien avec vérification client
                 Route::post('delete-with-client', [PropertyActionController::class, 'deleteWithClientVerification'])
                     ->name('mes-biens.delete-with-client');
+                    
+                // Supprimer un bien directement (sans vérification client)
+                Route::delete('delete-direct', [PropertyActionController::class, 'deleteDirect'])
+                    ->name('mes-biens.delete-direct');
             });
             
             // Gestion des abonnements du propriétaire
@@ -164,6 +168,12 @@ require __DIR__.'/auth.php';
             // Gestion des abonnements
             Route::get('/abonnements', [SubscriptionController::class, 'index'])
                 ->name('subscriptions');
+            Route::post('/abonnements', [SubscriptionController::class, 'store'])
+                ->name('subscriptions.store');
+            Route::put('/abonnements/{subscription}', [SubscriptionController::class, 'update'])
+                ->name('subscriptions.update');
+            Route::delete('/abonnements/{subscription}', [SubscriptionController::class, 'destroy'])
+                ->name('subscriptions.destroy');
 
             // Gestion des clients
             Route::get('/clients', [ClientController::class, 'index'])

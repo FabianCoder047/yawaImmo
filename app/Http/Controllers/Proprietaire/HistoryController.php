@@ -40,7 +40,7 @@ class HistoryController extends Controller
                     'client_surname' => $property->client_surname,
                     'client_phone' => $property->client_phone,
                     'category_name' => $property->categorie ? $property->categorie->name : 'Non catégorisé',
-                    'image' => $property->image ? asset('storage/' . $property->image) : null,
+                    'image' => $property->image ? asset('storage/' . ltrim(str_replace('storage/', '', $property->image), '/')) : null,
                     'deleted_at' => $property->deleted_at, // Ajout pour le débogage
                 ];
             });

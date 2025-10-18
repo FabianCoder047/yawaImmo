@@ -2,6 +2,10 @@
 import LayoutAdmin from '@/layouts/layoutAdmin';
 import { Edit, Plus, Trash2, X } from 'lucide-react';
 import React, { JSX, ReactNode, useState, useEffect, useCallback } from 'react';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
 import Pagination from '@/components/ui/Pagination';
 
 type Category = {
@@ -30,7 +34,7 @@ export default function Categories({
         last_page: 1
     } 
 }: CategoriesProps) {
-    const [categories, setCategories] = useState<Category[]>(initialCategories || []);
+    const [categories, setCategories] = useState<Category[]>(initialCategories);
     const [pagination, setPagination] = useState<Pagination>(initialPagination);
     const [loading, setLoading] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -40,44 +44,50 @@ export default function Categories({
         name: '',
     });
 
-    const fetchCategories = useCallback(async (page: number) => {
+    const fetchCategories = useCallback(async (page: number = 1) => {
         try {
             setLoading(true);
-            console.log('Envoi de la requête à:', `/admin/api/categories?page=${page}`);
             const response = await fetch(`/admin/api/categories?page=${page}`, {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                credentials: 'include' // Important pour les cookies de session
+                credentials: 'same-origin',
             });
-            
-            console.log('Réponse reçue, statut:', response.status);
-            
+
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Erreur de réponse:', errorText);
-                throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
+                throw new Error(`Erreur HTTP: ${response.status}`);
             }
-            
-            const result = await response.json();
-            console.log('Données de la réponse:', result);
-            
-            if (result.success && result.data) {
-                console.log('Catégories reçues:', result.data);
-                setCategories(result.data);
-                setPagination({
-                    total: result.pagination?.total || result.total || 0,
-                    per_page: result.pagination?.per_page || result.per_page || 5,
-                    current_page: result.pagination?.current_page || result.current_page || 1,
-                    last_page: result.pagination?.last_page || result.last_page || 1,
-                });
+
+            const responseData = await response.json();
+            console.log('Données reçues de l\'API:', responseData);
+
+            if (responseData && responseData.success && Array.isArray(responseData.data)) {
+                setCategories(responseData.data);
+                
+                if (responseData.pagination) {
+                    setPagination(prev => ({
+                        ...prev,
+                        total: responseData.pagination.total || 0,
+                        per_page: responseData.pagination.per_page || 5,
+                        current_page: responseData.pagination.current_page || 1,
+                        last_page: responseData.pagination.last_page || 1
+                    }));
+                }
             } else {
-                console.error('Format de réponse inattendu:', result);
+                console.error('Format de réponse inattendu:', responseData);
+                throw new Error('Format de réponse inattendu du serveur');
             }
         } catch (error) {
             console.error('Erreur lors du chargement des catégories:', error);
+            
+            await MySwal.fire({
+                title: 'Erreur',
+                text: 'Impossible de charger les catégories',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+            });
         } finally {
             setLoading(false);
         }
@@ -109,7 +119,7 @@ export default function Categories({
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             console.log('CSRF Token:', csrfToken);
 
-            const response = await fetch('/admin/categories', {
+            const response = await fetch('/admin/api/categories', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -126,6 +136,7 @@ export default function Categories({
                 setCategories((prev) => [...prev, newCategory]);
                 setFormData({ name: '' });
                 setShowAddModal(false);
+                window.location.reload();
             } else {
                 const errorData = await response.json();
                 console.error('Erreur serveur:', errorData);
@@ -151,7 +162,7 @@ export default function Categories({
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-            const response = await fetch(`/admin/categories/${editingCategory.id}`, {
+            const response = await fetch(`/admin/api/categories/${editingCategory.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -161,47 +172,94 @@ export default function Categories({
                 body: JSON.stringify(formData),
             });
 
+            const data = await response.json();
+
             if (response.ok) {
-                const updatedCategory = await response.json();
-                setCategories((prev) => prev.map((cat) => (cat.id === editingCategory.id ? updatedCategory : cat)));
+                setCategories((prev) => prev.map((cat) => (cat.id === editingCategory.id ? data : cat)));
                 setFormData({ name: '' });
                 setShowEditModal(false);
                 setEditingCategory(null);
+                
+                // Afficher un message de succès
+                await MySwal.fire({
+                    title: 'Succès !',
+                    text: 'La catégorie a été mise à jour avec succès.',
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                });
+                
+                // Recharger les données
+                await fetchCategories(pagination.current_page);
             } else {
-                const errorData = await response.json();
-                console.error('Erreur serveur:', errorData);
-                alert('Erreur lors de la mise à jour: ' + (errorData.message || 'Erreur inconnue'));
+                throw new Error(data.message || 'Erreur lors de la mise à jour');
             }
         } catch (error) {
             console.error('Erreur lors de la mise à jour:', error);
-            alert('Erreur de connexion. Vérifiez votre connexion internet.');
+            
+            await MySwal.fire({
+                title: 'Erreur',
+                text: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+            });
         }
     };
 
-    const handleDelete = async (categoryId: number) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
+    const handleDelete = async (categoryId: number, categoryName: string) => {
+        const result = await MySwal.fire({
+            title: 'Êtes-vous sûr ?',
+            text: `Voulez-vous vraiment supprimer la catégorie "${categoryName}" ? Cette action est irréversible.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler',
+            reverseButtons: true
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
 
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-            const response = await fetch(`/admin/categories/${categoryId}`, {
+            const response = await fetch(`/admin/api/categories/${categoryId}`, {
                 method: 'DELETE',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken || '',
                     Accept: 'application/json',
                 },
             });
 
+            const data = await response.json();
+
             if (response.ok) {
                 setCategories((prev) => prev.filter((cat) => cat.id !== categoryId));
+                
+                await MySwal.fire({
+                    title: 'Supprimé !',
+                    text: 'La catégorie a été supprimée avec succès.',
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                });
+                
+                // Recharger les données sans recharger toute la page
+                fetchCategories(pagination.current_page);
             } else {
-                const errorData = await response.json();
-                console.error('Erreur serveur:', errorData);
-                alert('Erreur lors de la suppression: ' + (errorData.message || 'Erreur inconnue'));
+                throw new Error(data.message || 'Erreur lors de la suppression');
             }
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
-            alert('Erreur de connexion. Vérifiez votre connexion internet.');
+            
+            await MySwal.fire({
+                title: 'Erreur',
+                text: error instanceof Error ? error.message : 'Une erreur est survenue lors de la suppression',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+            });
         }
     };
 
@@ -232,12 +290,20 @@ export default function Categories({
                     ) : (
                         categories.map((category) => (
                             <div key={category.id} className="flex items-center justify-between px-6 py-4">
-                                <span className="font-medium text-gray-900">{category.name}</span>
+                                <span className="text-gray-900">{category.name}</span>
                                 <div className="flex gap-2">
-                                    <button onClick={() => handleEdit(category)} className="rounded-md p-2 text-blue-600 hover:bg-blue-50">
+                                    <button
+                                        onClick={() => handleEdit(category)}
+                                        className="rounded p-1 text-blue-600 hover:bg-blue-50"
+                                        type="button"
+                                    >
                                         <Edit className="h-4 w-4" />
                                     </button>
-                                    <button onClick={() => handleDelete(category.id)} className="rounded-md p-2 text-red-600 hover:bg-red-50">
+                                    <button
+                                        onClick={() => handleDelete(category.id, category.name)}
+                                        className="rounded p-1 text-red-600 hover:bg-red-50"
+                                        type="button"
+                                    >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
@@ -245,15 +311,15 @@ export default function Categories({
                         ))
                     )}
                 </div>
-                
+
                 {/* Pagination */}
                 <div className="flex flex-col sm:flex-row justify-between items-center mt-6 px-6 py-4">
                     <Pagination
-                currentPage={pagination.current_page}
-                totalPages={pagination.last_page}
-                onPageChange={handlePageChange}
-                className="mt-4"
-            />
+                        currentPage={pagination.current_page}
+                        totalPages={pagination.last_page}
+                        onPageChange={handlePageChange}
+                        className="mt-4"
+                    />
                 </div>
             </div>
 

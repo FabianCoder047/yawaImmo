@@ -117,13 +117,64 @@ class PropertyController extends Controller
      */
     public function show($id)
     {
+        // Récupérer la propriété avec les relations nécessaires
         $property = Property::with(['user', 'categorie'])
             ->where('status', 'Approuvé')
             ->findOrFail($id);
+            
+        // Forcer le chargement des attributs supplémentaires
+        $property->append(['all_image_urls', 'formatted_additional_images']);
+        
+        // Debug: Afficher les données brutes
+        \Log::info('=== DÉBOGAGE DES IMAGES ===');
+        \Log::info('Données de la propriété:', [
+            'id' => $property->id,
+            'image' => $property->image,
+            'additional_images' => $property->additional_images,
+            'all_image_urls' => $property->all_image_urls,
+            'formatted_additional_images' => $property->formatted_additional_images,
+            'raw_attributes' => $property->getAttributes(),
+            'storage_path' => storage_path('app/public'),
+            'public_path' => public_path('storage')
+        ]);
+        
+        // Vérifier l'existence des fichiers
+        if (!empty($property->image)) {
+            $imagePath = str_replace('storage/', '', $property->image);
+            \Log::info('Vérification de l\'image principale:', [
+                'path' => $imagePath,
+                'exists' => \Storage::disk('public')->exists($imagePath) ? 'Oui' : 'Non',
+                'full_path' => storage_path('app/public/' . $imagePath)
+            ]);
+        }
+        
+        if (!empty($property->additional_images) && is_array($property->additional_images)) {
+            foreach ($property->additional_images as $index => $img) {
+                if (!empty($img)) {
+                    $imgPath = str_replace('storage/', '', $img);
+                    \Log::info('Vérification de l\'image supplémentaire ' . ($index + 1) . ':', [
+                        'path' => $imgPath,
+                        'exists' => \Storage::disk('public')->exists($imgPath) ? 'Oui' : 'Non',
+                        'full_path' => storage_path('app/public/' . $imgPath)
+                    ]);
+                }
+            }
+        }
 
         // Utiliser les accesseurs du modèle pour les URLs d'images
         $allImages = $property->all_image_urls;
-        $mainImage = !empty($allImages) ? $allImages[0] : null;
+        
+        // S'assurer que $allImages est un tableau
+        if (!is_array($allImages)) {
+            $allImages = [];
+        }
+        
+        // Nettoyer le tableau des images vides
+        $allImages = array_filter($allImages, function($image) {
+            return !empty($image);
+        });
+        
+        $mainImage = !empty($allImages) ? reset($allImages) : null;
         
         // Préparer les données pour le carrousel
         $carouselImages = array_map(function($image, $index) use ($mainImage) {
@@ -135,6 +186,10 @@ class PropertyController extends Controller
             ];
         }, $allImages, array_keys($allImages));
 
+        // S'assurer que toutes les images sont des tableaux et non null
+        $allImages = is_array($allImages) ? $allImages : [];
+        $carouselImages = is_array($carouselImages) ? $carouselImages : [];
+        
         $propertyData = [
             'id' => $property->id,
             'title' => $property->title,
@@ -148,9 +203,9 @@ class PropertyController extends Controller
             'status' => $property->status,
             'created_at' => $property->created_at->toDateTimeString(),
             'updated_at' => $property->updated_at->toDateTimeString(),
-            'images' => $allImages,
+            'images' => $allImages, // Toutes les URLs d'images
             'main_image' => $mainImage,
-            'carousel_images' => $carouselImages, // Nouveau format pour le carrousel
+            'carousel_images' => $carouselImages, // Format pour le carrousel
             'categorie' => $property->categorie ? [
                 'id' => $property->categorie->id,
                 'name' => $property->categorie->name,
@@ -166,8 +221,39 @@ class PropertyController extends Controller
             ] : null
         ];
 
+        // Récupérer des biens similaires (même catégorie, même type d'offre, limité à 4)
+        $similarProperties = [];
+        if ($property->categorie) {
+            $similarProperties = Property::with(['user', 'categorie'])
+                ->where('status', 'Approuvé')
+                ->where('id', '!=', $property->id) // Exclure le bien actuel
+                ->where('categorie_id', $property->categorie->id)
+                ->where('offre', $property->offre)
+                ->take(4)
+                ->get()
+                ->map(function($similar) {
+                    $allImages = $similar->all_image_urls;
+                    return [
+                        'id' => $similar->id,
+                        'title' => $similar->title,
+                        'price' => $similar->price,
+                        'location' => $similar->location,
+                        'surface' => $similar->surface,
+                        'rooms' => $similar->rooms,
+                        'offre' => $similar->offre,
+                        'image_url' => !empty($allImages) ? $allImages[0] : null,
+                        'categorie' => $similar->categorie ? [
+                            'id' => $similar->categorie->id,
+                            'name' => $similar->categorie->name,
+                            'slug' => $similar->categorie->slug
+                        ] : null
+                    ];
+                });
+        }
+
         return Inertia::render('properties/show', [
-            'property' => $propertyData
+            'property' => $propertyData,
+            'similarProperties' => $similarProperties
         ]);
     }
 }

@@ -29,11 +29,11 @@ class HistoryController extends Controller
             ->get()
             ->map(function($property) {
                 // Gérer l'image principale
-                $mainImage = $property->image 
-                    ? (str_starts_with($property->image, 'http') 
-                        ? $property->image 
-                        : asset('storage/' . ltrim($property->image, '/')))
-                    : null;
+                $mainImage = null;
+                if ($property->image) {
+                    $cleanImagePath = ltrim(str_replace('storage/', '', $property->image), '/');
+                    $mainImage = asset('storage/' . $cleanImagePath);
+                }
 
                 // Gérer les images supplémentaires
                 $additionalImages = is_string($property->additional_images) 
@@ -56,7 +56,7 @@ class HistoryController extends Controller
                                 'id' => 'additional_' . $index,
                                 'url' => str_starts_with($img, 'http') 
                                     ? $img 
-                                    : asset('storage/' . ltrim($img, '/')),
+                                    : asset('storage/' . ltrim(str_replace('storage/', '', $img), '/')),
                                 'is_main' => false
                             ];
                         }
